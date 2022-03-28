@@ -62,7 +62,7 @@ sample_wav_maker addwave --input "file" [--sin | --tri | --square] [--amp \<f\> 
     * 16, 24, 32 : Signed 16,24,32bit PCM
 
 ### Wave Length
-### --seclen \<f\>
+#### --seclen \<f\>
 * change file length (seconds)
 * f range : 0.0 /<= f && f \<= ((0xffffffff - 0x2E) / (bits per sample * channel * sampling rate)).floor()
 
@@ -74,21 +74,21 @@ sample_wav_maker addwave --input "file" [--sin | --tri | --square] [--amp \<f\> 
 #### --sin
 * change wave shape to sine wave.
 
-### --tri
+#### --tri
 * change wave shape to triangle wave.
 
-### --square
+#### --square
 * change wave shape to square wave.
 
-### --amp \<f\>
+#### --amp \<f\>
 * change amplitude (dB)
 * f range : -100.0 /<= f && f \<= 100.0
 
-### --freq <\f\>
+#### --freq <\f\>
 * change frequency (Hz)
 * f range : 0.0 /<= f
 
-### --secspan \<f\> \<f\>
+#### --secspan \<f\> \<f\>
 * change wave span (seconds)
 * first arguments is start seconds, and second one is end seconds
 * f range : 0.0 /<= f && f \<= ((0xffffffff - 0x2E) / (bits per sample * channel * sampling rate)).floor()
@@ -98,15 +98,15 @@ sample_wav_maker addwave --input "file" [--sin | --tri | --square] [--amp \<f\> 
 * first arguments is start data's index, and second one is end data's index
 * n range : 0 /<= n && n \<= (0xffffffff - 0x2E) / (bits per sample * channel)
 
-### --piphase <\f\>
+#### --piphase <\f\>
 * change phase when span starts (PI * rad)
 * f range : 0.0 /<= f && f \< 2.0
 
 ### File Path
-### --output "file"
+#### --output "file"
 * save to "file"
 
-### --input "file"
+#### --input "file"
 * load from "file" as source waves.
 
 
