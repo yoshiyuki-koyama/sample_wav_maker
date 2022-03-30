@@ -1,8 +1,6 @@
 use wav_f64vec::*;
 
 pub fn create_sin_wave(wave_format: &WaveFormat, amplitude: f64, frequency: f64, pi_phase: f64, len: usize) -> Vec<Vec<f64>> {
-    dbg!(wave_format);
-    dbg!(amplitude, frequency, pi_phase, len);
     let amp_coef = 10.0_f64.powf(amplitude / 10.0);
 
     let mut channel_data_vec: Vec<Vec<f64>> = Vec::new();
@@ -27,8 +25,6 @@ pub fn create_triangle_wave(
     pi_phase: f64,
     len: usize,
 ) -> Vec<Vec<f64>> {
-    dbg!(wave_format);
-    dbg!(amplitude, frequency, pi_phase, len);
     let amp_coef = 10.0_f64.powf(amplitude / 10.0);
 
     let mut channel_data_vec: Vec<Vec<f64>> = Vec::new();
@@ -52,8 +48,6 @@ pub fn create_triangle_wave(
 }
 
 pub fn create_square_wave(wave_format: &WaveFormat, amplitude: f64, frequency: f64, pi_phase: f64, len: usize) -> Vec<Vec<f64>> {
-    dbg!(wave_format);
-    dbg!(amplitude, frequency, pi_phase, len);
     let amp_coef = 10.0_f64.powf(amplitude / 10.0);
 
     let mut channel_data_vec: Vec<Vec<f64>> = Vec::new();

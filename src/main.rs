@@ -28,7 +28,7 @@ enum CommandKind {
 enum OptionID {
     Format,
     SecLength,
-    NumLength,
+    FrameNum,
     InputPath,
     OutputPath,
     OverWrite,
@@ -36,7 +36,7 @@ enum OptionID {
     Amplitude,
     Frequency,
     SecSpan,
-    NumSpan,
+    FrameSpan,
     PiPhase,
 }
 
@@ -61,7 +61,7 @@ impl CommandOption {
             kind: match id {
                 OptionID::Format => OptionKind::FormatOption,
                 OptionID::SecLength => OptionKind::FormatOption,
-                OptionID::NumLength => OptionKind::FormatOption,
+                OptionID::FrameNum => OptionKind::FormatOption,
                 OptionID::InputPath => OptionKind::PathOption,
                 OptionID::OutputPath => OptionKind::PathOption,
                 OptionID::OverWrite => OptionKind::PathOption,
@@ -69,13 +69,13 @@ impl CommandOption {
                 OptionID::Amplitude => OptionKind::WaveOption,
                 OptionID::Frequency => OptionKind::WaveOption,
                 OptionID::SecSpan => OptionKind::WaveOption,
-                OptionID::NumSpan => OptionKind::WaveOption,
+                OptionID::FrameSpan => OptionKind::WaveOption,
                 OptionID::PiPhase => OptionKind::WaveOption,
             },
             op_num: match id {
                 OptionID::Format => Some(4),
                 OptionID::SecLength => Some(1),
-                OptionID::NumLength => Some(1),
+                OptionID::FrameNum => Some(1),
                 OptionID::InputPath => Some(1),
                 OptionID::OutputPath => Some(1),
                 OptionID::OverWrite => Some(0),
@@ -83,7 +83,7 @@ impl CommandOption {
                 OptionID::Amplitude => Some(1),
                 OptionID::Frequency => Some(1),
                 OptionID::SecSpan => Some(2),
-                OptionID::NumSpan => Some(2),
+                OptionID::FrameSpan => Some(2),
                 OptionID::PiPhase => Some(1),
             },
             count: 0,
@@ -94,7 +94,7 @@ impl CommandOption {
 struct FormatOptions {
     op_format: Option<WaveFormat>,
     op_sec_len: Option<f64>,
-    op_num_len: Option<usize>,
+    op_frame_num: Option<usize>,
 }
 
 impl FormatOptions {
@@ -102,7 +102,7 @@ impl FormatOptions {
         FormatOptions {
             op_format: None,
             op_sec_len: None,
-            op_num_len: None,
+            op_frame_num: None,
         }
     }
 }
@@ -111,6 +111,7 @@ struct PathOptions {
     op_output_path: Option<PathBuf>,
     op_input_path: Option<PathBuf>,
     overwrite: bool,
+    forcedwrite: bool,
 }
 
 impl PathOptions {
@@ -119,11 +120,12 @@ impl PathOptions {
             op_output_path: None,
             op_input_path: None,
             overwrite: false,
+            forcedwrite: false,
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 enum WaveShape {
     Sine,
     Triangle,
@@ -135,7 +137,7 @@ struct WaveOptions {
     op_frequency: Option<f64>,
     op_pi_phase: Option<f64>,
     op_sec_span: Option<(f64, f64)>,
-    op_num_span: Option<(usize, usize)>,
+    op_frame_span: Option<(usize, usize)>,
 }
 
 impl WaveOptions {
@@ -146,7 +148,7 @@ impl WaveOptions {
             op_frequency: None,
             op_pi_phase: None,
             op_sec_span: None,
-            op_num_span: None,
+            op_frame_span: None,
         }
     }
 }
@@ -232,7 +234,7 @@ fn set_option_val_format(command_option: &CommandOption, format_options: &mut Fo
 
         OptionID::SecLength => {
             let sec_len = arg.parse::<f64>()?;
-            if format_options.op_num_len.is_some() || format_options.op_sec_len.is_some() {
+            if format_options.op_frame_num.is_some() || format_options.op_sec_len.is_some() {
                 return Err(SampleWavError::new(
                     SampleWavErrorKind::DuplicatedArguments,
                     Some("length".to_string()),
@@ -247,15 +249,15 @@ fn set_option_val_format(command_option: &CommandOption, format_options: &mut Fo
             }
             return Ok(());
         }
-        OptionID::NumLength => {
-            let num_len = usize::from_str_radix(arg, 10)?;
-            if format_options.op_sec_len.is_some() || format_options.op_num_len.is_some() {
+        OptionID::FrameNum => {
+            let frame_num = usize::from_str_radix(arg, 10)?;
+            if format_options.op_sec_len.is_some() || format_options.op_frame_num.is_some() {
                 return Err(SampleWavError::new(
                     SampleWavErrorKind::DuplicatedArguments,
                     Some("length".to_string()),
                 ));
             } else {
-                format_options.op_num_len = Some(num_len);
+                format_options.op_frame_num = Some(frame_num);
             }
             return Ok(());
         }
@@ -334,7 +336,7 @@ fn set_option_val_wave(command_option: &CommandOption, wave_options: &mut WaveOp
             return Ok(());
         }
         OptionID::SecSpan => {
-            if wave_options.op_num_span.is_some() {
+            if wave_options.op_frame_span.is_some() {
                 return Err(SampleWavError::new(
                     SampleWavErrorKind::DuplicatedArguments,
                     Some("span".to_string()),
@@ -358,7 +360,7 @@ fn set_option_val_wave(command_option: &CommandOption, wave_options: &mut WaveOp
             }
             return Ok(());
         }
-        OptionID::NumSpan => {
+        OptionID::FrameSpan => {
             if wave_options.op_sec_span.is_some() {
                 return Err(SampleWavError::new(
                     SampleWavErrorKind::DuplicatedArguments,
@@ -367,17 +369,17 @@ fn set_option_val_wave(command_option: &CommandOption, wave_options: &mut WaveOp
             }
             let num = usize::from_str_radix(arg, 10)?;
             if command_option.count == 0 {
-                if wave_options.op_num_span.is_some() {
+                if wave_options.op_frame_span.is_some() {
                     return Err(SampleWavError::new(
                         SampleWavErrorKind::DuplicatedArguments,
                         Some("span".to_string()),
                     ));
                 } else {
-                    wave_options.op_num_span = Some((num, num));
+                    wave_options.op_frame_span = Some((num, num));
                 }
             } else if command_option.count == 1 {
-                let num_span = wave_options.op_num_span.as_mut().unwrap();
-                *num_span = (num_span.0, num);
+                let frame_span = wave_options.op_frame_span.as_mut().unwrap();
+                *frame_span = (frame_span.0, num);
             } else {
                 panic!()
             }
@@ -385,17 +387,17 @@ fn set_option_val_wave(command_option: &CommandOption, wave_options: &mut WaveOp
         }
         OptionID::PiPhase => {
             let pi_phase = arg.parse::<f64>()?;
-            if wave_options.op_amplitude.is_some() {
+            if wave_options.op_pi_phase.is_some() {
                 return Err(SampleWavError::new(
                     SampleWavErrorKind::DuplicatedArguments,
-                    Some("phasepi".to_string()),
+                    Some("piphase".to_string()),
                 ));
             } else if 0.0 <= pi_phase && pi_phase < 2.0 {
                 wave_options.op_pi_phase = Some(pi_phase);
             } else {
                 return Err(SampleWavError::new(
                     SampleWavErrorKind::IrregalArguments,
-                    Some("phasepi must be  >= 0.0 and < 2.0".to_string()),
+                    Some("piphase must be  >= 0.0 and < 2.0".to_string()),
                 ));
             }
             return Ok(());
@@ -452,9 +454,9 @@ fn parse_options(arg_vec: &Vec<String>, command_kind: CommandKind) -> Result<(Fo
                         ));
                     }
                 }
-                "--numlen" => {
+                "--framenum" => {
                     if command_kind == CommandKind::New {
-                        op_command_option = Some(CommandOption::new(OptionID::NumLength));
+                        op_command_option = Some(CommandOption::new(OptionID::FrameNum));
                     } else {
                         return Err(SampleWavError::new(
                             SampleWavErrorKind::IrregalArguments,
@@ -474,6 +476,10 @@ fn parse_options(arg_vec: &Vec<String>, command_kind: CommandKind) -> Result<(Fo
                 }
                 "--out" => {
                     op_command_option = Some(CommandOption::new(OptionID::OutputPath));
+                }
+                "--outf" => {
+                    op_command_option = Some(CommandOption::new(OptionID::OutputPath));
+                    path_options.forcedwrite = true;
                 }
                 "--ow" => {
                     if command_kind == CommandKind::Add {
@@ -535,8 +541,8 @@ fn parse_options(arg_vec: &Vec<String>, command_kind: CommandKind) -> Result<(Fo
                 "--secspan" => {
                     op_command_option = Some(CommandOption::new(OptionID::SecSpan));
                 }
-                "--numspan" => {
-                    op_command_option = Some(CommandOption::new(OptionID::NumSpan));
+                "--framespan" => {
+                    op_command_option = Some(CommandOption::new(OptionID::FrameSpan));
                 }
                 "--piphase" => {
                     op_command_option = Some(CommandOption::new(OptionID::PiPhase));
@@ -586,15 +592,15 @@ fn make_wav_format_and_len(format_options: &FormatOptions) -> (WaveFormat, usize
     } else {
         DEFAULT_WAVE_FORMAT
     };
-    let sampling_num: usize;
+    let frame_num: usize;
     if let Some(sec_len) = format_options.op_sec_len {
-        sampling_num = (sec_len * wave_format.sampling_rate as f64) as usize;
-    } else if let Some(num_len) = format_options.op_num_len {
-        sampling_num = num_len;
+        frame_num = (sec_len * wave_format.sampling_rate as f64) as usize;
+    } else if let Some(some_frame_num) = format_options.op_frame_num {
+        frame_num = some_frame_num;
     } else {
-        sampling_num = 5 * wave_format.sampling_rate;
+        frame_num = 5 * wave_format.sampling_rate;
     }
-    (wave_format, sampling_num)
+    (wave_format, frame_num)
 }
 
 fn make_wave(
@@ -623,26 +629,30 @@ fn make_wave(
     } else {
         0.0
     };
-    let num_span = if let Some(some_sec_span) = wave_options.op_sec_span {
+    let frame_span = if let Some(some_sec_span) = wave_options.op_sec_span {
         (
             (some_sec_span.0 * wave_format.sampling_rate as f64) as usize,
             (some_sec_span.1 * wave_format.sampling_rate as f64) as usize,
         )
-    } else if let Some(some_num_span) = wave_options.op_num_span {
-        some_num_span
+    } else if let Some(some_frame_span) = wave_options.op_frame_span {
+        some_frame_span
     } else {
         (0, src_len)
     };
-    if num_span.0 > num_span.1 || num_span.1 > AUDIO_DATA_LENGTH_MAX {
+    if frame_span.0 > frame_span.1 || frame_span.1 > AUDIO_DATA_LENGTH_MAX {
         return Err(SampleWavError::new(
             SampleWavErrorKind::IrregalArguments,
             Some("span".to_string()),
         ));
     }
+    if cfg!(debug_assertions) {
+        dbg!(wave_format);
+        dbg!(shape, amplitude, frequency, pi_phase, src_len, frame_span);
+    }
     let additional_channel_data_vec = match shape {
-        WaveShape::Sine => create_sin_wave(&wave_format, amplitude, frequency, pi_phase, num_span.1 - num_span.0),
-        WaveShape::Triangle => create_triangle_wave(&wave_format, amplitude, frequency, pi_phase, num_span.1 - num_span.0),
-        WaveShape::Square => create_square_wave(&wave_format, amplitude, frequency, pi_phase, num_span.1 - num_span.0),
+        WaveShape::Sine => create_sin_wave(&wave_format, amplitude, frequency, pi_phase, frame_span.1 - frame_span.0),
+        WaveShape::Triangle => create_triangle_wave(&wave_format, amplitude, frequency, pi_phase, frame_span.1 - frame_span.0),
+        WaveShape::Square => create_square_wave(&wave_format, amplitude, frequency, pi_phase, frame_span.1 - frame_span.0),
     };
 
     // add created wave to source wave.
@@ -652,15 +662,15 @@ fn make_wave(
         vec![vec![0.0; src_len]; wave_format.channel]
     };
 
-    if num_span.1 > src_len {
+    if frame_span.1 > src_len {
         for data_vec in &mut channel_data_vec {
-            data_vec.append(&mut vec![0.0; num_span.1 - src_len]);
+            data_vec.append(&mut vec![0.0; frame_span.1 - src_len]);
         }
     }
 
     for channel_idx in 0..wave_format.channel {
-        for data_idx in num_span.0..num_span.1 {
-            channel_data_vec[channel_idx][data_idx] += additional_channel_data_vec[channel_idx][data_idx - num_span.0]
+        for data_idx in frame_span.0..frame_span.1 {
+            channel_data_vec[channel_idx][data_idx] += additional_channel_data_vec[channel_idx][data_idx - frame_span.0]
         }
     }
     Ok(channel_data_vec)
@@ -691,11 +701,11 @@ fn make_wav_file(
     } else {
         PathBuf::from("./new.wav")
     };
-    if output_path.exists() && !path_options.overwrite {
+    if output_path.exists() && !path_options.overwrite && !path_options.forcedwrite {
         let stdin = std::io::stdin();
         let mut answer = String::new();
         println!(
-            "{} is already exist. Do you want to overwrite it?(y/n)",
+            "\"{}\" is already exist. Do you want to overwrite it?(y/n)",
             output_path.to_string_lossy()
         );
         stdin.read_line(&mut answer)?;
@@ -723,8 +733,8 @@ fn open_wav_file(path_options: &PathOptions) -> Result<WavFile> {
 
 fn command_new(arg_vec: &Vec<String>) -> Result<()> {
     let (format_options, wave_options, path_options) = parse_options(arg_vec, CommandKind::New)?;
-    let (wave_format, sampling_num) = make_wav_format_and_len(&format_options);
-    let channel_data_vec = make_wave(&wave_options, &wave_format, None, sampling_num)?;
+    let (wave_format, frame_num) = make_wav_format_and_len(&format_options);
+    let channel_data_vec = make_wave(&wave_options, &wave_format, None, frame_num)?;
     make_wav_file(None, path_options, wave_format, channel_data_vec)?;
     Ok(())
 }
@@ -745,7 +755,6 @@ fn main_return_result() -> Result<()> {
         if idx > ARG_NUM_MAX {
             return Err(SampleWavError::new(SampleWavErrorKind::TooManyArguments, None));
         }
-        dbg!(idx, arg.clone());
         arg_vec.push(arg);
     }
     if arg_vec.len() > 0 {
