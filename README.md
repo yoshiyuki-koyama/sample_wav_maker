@@ -85,7 +85,7 @@ You can only set the following options to "new".
         * 16, 24, 32 : Signed 16,24,32bit PCM
 
 #### `--seclen <f>`
-* Change file length (seconds)/
+* Change file length (seconds)
 * f range : `0.0 <= f && f <= (4,294,967,249 / (bits per sample * channel * sampling rate)).floor()`
 * You can only set either "--seclen" or "--framenum".
 
@@ -118,12 +118,15 @@ You can only set the following options to "new".
 ### Arguments about Wave Shape
 #### `--sin`
 * Change wave shape to sine wave from default.
+* You can set only one of "--sin", "--tri" or "--square".
 
 #### `--tri`
 * Change wave shape to triangle wave from default.
+* You can set only one of "--sin", "--tri" or "--square".
 
 #### `--square`
 * Change wave shape to square wave from default.
+* You can set only one of "--sin", "--tri" or "--square".
 
 #### `--amp <f>`
 * Change amplitude (dB) from default.
