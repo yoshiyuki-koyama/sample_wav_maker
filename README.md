@@ -1,7 +1,5 @@
-# Under Development
-
 # sample_wav_maker
-A CLI application that makes wav files to use as samples. It can superpose or combine sine waves, triangle waves and square waves with various parameter.
+A CLI application that makes wav files with superimposed basic waveforms. It can superpose sine waves, triangle waves and square waves with various parameter.
 Only for 64bit OS.
 
 ## Caution
@@ -51,7 +49,10 @@ sample_wav_maker.exe new [--out "file"] [--format <n(format id)> <n(channel)> <n
 ```
 sample_wav_maker.exe new --out sin.wav --format 1 2 48000 16 --seclen 2.0 --sin --amp -4 --freq 440.0 --secspan 0.01  1.6 --piphase 1.0
 ```
+A sine wave starts at 0.01sec
 
+
+![](image/sin_wav.png)
 ### Add wave to a existing file
 ```
 sample_wav_maker.exe addwave --in "file" [--out "file"| --ow] [--sin | --tri | --square] [--amp <f> ] [--freq <f>] [--secspan <f> <f> | --framespan <n>  <n>] [--piphase <f>]
@@ -61,6 +62,10 @@ sample_wav_maker.exe addwave --in "file" [--out "file"| --ow] [--sin | --tri | -
 ```
 sample_wav_maker.exe addwave --in sin.wav --out sin_square.wav --square --amp -12 --freq 1318.5 --secspan 0.005  1.0 --piphase 1.5
 ```
+A square wave starts at 0.005seconds. and it is added on the a sine wave.
+
+
+![](image/sin_square_wav.png)
 
 ### Arguments about Format and File Length
 You can only set the following options to "new".
@@ -80,7 +85,7 @@ You can only set the following options to "new".
         * 16, 24, 32 : Signed 16,24,32bit PCM
 
 #### `--seclen <f>`
-* Change file length (seconds)/
+* Change file length (seconds)
 * f range : `0.0 <= f && f <= (4,294,967,249 / (bits per sample * channel * sampling rate)).floor()`
 * You can only set either "--seclen" or "--framenum".
 
@@ -113,12 +118,15 @@ You can only set the following options to "new".
 ### Arguments about Wave Shape
 #### `--sin`
 * Change wave shape to sine wave from default.
+* You can set only one of "--sin", "--tri" or "--square".
 
 #### `--tri`
 * Change wave shape to triangle wave from default.
+* You can set only one of "--sin", "--tri" or "--square".
 
 #### `--square`
 * Change wave shape to square wave from default.
+* You can set only one of "--sin", "--tri" or "--square".
 
 #### `--amp <f>`
 * Change amplitude (dB) from default.

@@ -1,8 +1,8 @@
 extern crate wav_f64vec;
 use wav_f64vec::*;
 
-mod create_wave;
-use create_wave::*;
+mod basic_wave;
+use basic_wave::*;
 
 mod error;
 use error::*;
